@@ -1,30 +1,61 @@
 local oppDirs          = {"up", "down", "left", "right"}
 local prevDir          = nil
-local curDir           = nil 
+local nextDir          = nil 
 local playerGuess      = nil
-local isCorrect        = false
+local isCorrect        = false 
 local hasPlayerGuessed = false
+local currentTurn      = "player"
+local correctGuesses   = 0
+local playerWins       = false
+local fishPosX         = 400
+local fishPosY         = 510
 
 function love.load()
+    love.window.setTitle("Fish Boxing")
     love.graphics.setDefaultFilter("nearest") -- removes blur from images
     math.randomseed(os.time())
 
     playerGuess = " "
     shuffle(oppDirs)
-    curDir = oppDirs[1] 
+    nextDir = oppDirs[1] 
 
     font      = love.graphics.getFont()
     yourText  = love.graphics.newText(font, "Your Turn")
     oppText   = love.graphics.newText(font, "Enemy Turn")
 
-    oppTurnOppIdle  = love.graphics.newImage("oppTurnOppIdle.png")
-    yourTurnOppIdle = love.graphics.newImage("yourTurnOppIdle.png")
-    heart           = love.graphics.newImage("heart.png")
-    playerFish      = love.graphics.newImage("playerFish.png")
-    fishDirLeft     = love.graphics.newImage("fishDirLeft.png")
-    fishDirRight    = love.graphics.newImage("fishDirRight.png")
-    fishDirUp       = love.graphics.newImage("fishDirUp.png")
-    fishDirDown     = love.graphics.newImage("fishDirDown.png")
+    -- GRAPHICS
+    oppTurnOppIdle  = love.graphics.newImage("assets/graphics/oppTurnOppIdle.png")
+    yourTurnOppIdle = love.graphics.newImage("assets/graphics/yourTurnOppIdle.png")
+    heart           = love.graphics.newImage("assets/graphics/heart.png")
+    playerFish      = love.graphics.newImage("assets/graphics/playerFish.png")
+    fishDirLeft     = love.graphics.newImage("assets/graphics/fishDirLeft.png")
+    fishDirRight    = love.graphics.newImage("assets/graphics/fishDirRight.png")
+    fishDirUp       = love.graphics.newImage("assets/graphics/fishDirUp.png")
+    fishDirDown     = love.graphics.newImage("assets/graphics/fishDirDown.png")
+    winScene1       = love.graphics.newImage("assets/graphics/winScene.png")
+
+    -- MUSIC
+    dingyHalls      = love.audio.newSource("assets/music/dingy-halls.wav", "stream")
+    stayAwake       = love.audio.newSource("assets/music/stay-awake.wav", "stream") 
+    wunder          = love.audio.newSource("assets/music/wunder.wav", "stream")
+
+    wunder:setVolume(0.03) -- 5% of original volume
+
+    -- SOUNDS
+    yourSlap        = love.audio.newSource("assets/sounds/slap.wav", "static")
+    yourMiss        = love.audio.newSource("assets/sounds/miss.wav", "static")
+    oppSlap         = love.audio.newSource("assets/sounds/oppSlap.wav", "static")
+    oppMiss         = love.audio.newSource("assets/sounds/oppMiss.wav", "static")
+    ohio            = love.audio.newSource("assets/sounds/ohio.wav", "static")
+
+    yourSlap:setVolume(1)
+    yourMiss:setVolume(1)
+    oppSlap:setVolume(1)
+    oppMiss:setVolume(1)
+    ohio:setVolume(0.1)
+
+    -- VIDEO
+    jos = love.graphics.newVideo("assets/jos.ogv")
 end
 
 function shuffle(array)
@@ -56,37 +87,99 @@ function love.keypressed(key)
 end
 
 function checkGuessTrue()
-    if playerGuess == curDir then
+    if playerGuess == nextDir then
         table.remove(oppDirs, 1)     
 
         if #oppDirs > 0 then
             shuffle(oppDirs)
-            curDir = oppDirs[1]
+            nextDir = oppDirs[1]
         else
-            curDir = nil
+            nextDir = nil
         end
 
+        if currentTurn == "player" then
+            love.audio.play(yourSlap)
+        elseif currentTurn == "opponent" then
+            love.audio.play(oppSlap)
+        end
+
+        prevDir = playerGuess
         isCorrect = true
 
-        fishPosX = math.random(0, 800)
-        fishPosY = math.random(0, 800)
+        correctGuesses = correctGuesses + 1
+
+        --fishPosX = math.random(100, 700)
+        --fishPosY = math.random(100, 800)
+    else
+        isCorrect      = false
+        correctGuesses = 0
     end
 end
 
+function resetValues()
+    oppDirs = {"up", "down", "left", "right"}
+    shuffle(oppDirs)
+    nextDir = oppDirs[1]
+end
+
+function switchTurn()
+    if currentTurn == "player" then
+        -- initial value setting
+        currentTurn = "opponent"
+        resetValues()
+
+    elseif currentTurn == "opponent" then
+        -- initial value setting
+        currentTurn = "player"
+        resetValues()
+
+    end
+
+    hasPlayerGuessed = false
+    isCorrect        = false
+end
+
 function love.update(dt)
+   
+    --[[
+    if not wunder:isPlaying() then
+        love.audio.play(wunder)
+    end
+    ]]
+    
     if hasPlayerGuessed then -- if player made a guess
         checkGuessTrue()
 
-        playerGuess = nil
+        hasPlayerGuessed = false -- I FORGOT THIS AND NOW THE TURN SYSTEM WORKS
+
+        if currentTurn == "player" then
+            love.audio.play(yourMiss)
+        elseif currentTurn == "opponent" then
+            love.audio.play(oppMiss)
+        end
+
+        if not isCorrect then
+            switchTurn()
+        end
+
+        if correctGuesses >= 3 then
+            -- something
+            resetValues()
+            playerWins = true
+        end
     end
 end
 
 function love.draw()
     --
-    love.graphics.print(tostring(playerGuess), 0, 0)
-    love.graphics.print(curDir, 0, 10)
-    love.graphics.print(oppDirs, 0, 20)
-    love.graphics.print(tostring(isCorrect), 0, 30)
+    love.graphics.print("PLAYER GUESS: " .. tostring(playerGuess), 0, 0)
+    love.graphics.print("PREVIOUS DIRECTION: " .. tostring(prevDir), 0 , 10)
+    love.graphics.print("NEXT DIRECTION: " .. nextDir, 0, 20)
+    love.graphics.print("DIRECTIONS: " .. table.concat(oppDirs), 0, 30)
+    love.graphics.print("IS CORRECT?: " .. tostring(isCorrect), 0, 40)
+    love.graphics.print("WHO'S TURN IS IT?: " .. currentTurn, 0, 50)
+    love.graphics.print("HAS THE MF GUESS?: " .. tostring(hasPlayerGuessed), 0, 60)
+    love.graphics.print("CORRECT GUESSES: " .. correctGuesses, 0, 70)
     
 
     love.graphics.setBackgroundColor(128/255,128/255,128/255)
@@ -116,15 +209,32 @@ function love.draw()
     love.graphics.draw(yourText, 505, 477, 0, 2, 2)
 
     -- guessing correctly
-    if isCorrect then
-        if playerGuess == "up" then
+    if correctGuesses >= 1 then
+        if prevDir == "up" then
             love.graphics.draw(fishDirUp, fishPosX, fishPosY, 0, 3, 3)
-        elseif playerGuess == "down" then
+        elseif prevDir == "down" then
             love.graphics.draw(fishDirDown, fishPosX, fishPosY, 0, 3, 3)
-        elseif playerGuess == "left" then
+        elseif prevDir == "left" then
             love.graphics.draw(fishDirLeft, fishPosX, fishPosY, 0, 3, 3)
-        elseif playerGuess == "right" then
+        elseif prevDir == "right" then
             love.graphics.draw(fishDirRight, fishPosX, fishPosY, 0, 3, 3)
         end     
+    end
+
+    -- opponent
+    if currentTurn == "opponent" then
+        love.graphics.draw(oppTurnOppIdle, 200, 75, 0, 6, 6)
+    end
+
+    -- win scene
+    if correctGuesses >= 3 then
+        love.graphics.draw(winScene1, 0, 0, 0, 1, 1)
+        --love.audio.stop(wunder)
+
+        --[[ MEME WIN SCENE
+        love.graphics.draw(jos, 0, 0, 0, 0.5, 0.5)
+        jos:play()
+        love.audio.play(ohio)
+        ]]
     end
 end
