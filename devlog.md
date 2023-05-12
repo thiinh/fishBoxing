@@ -39,5 +39,8 @@ allowed me to goof off with the process of development for a bit.
 I also uploaded the project to my GitHub today!
 ---------
 
-Day 4 (05-11-23)
-...
+DAY 4 (05-11-23)
+---------
+added escape and space function, added visuals for what directions player and opponent previously went,
+created & added lose scene, added strokes to indicate who's turn it is, added instructions in win/scene
+---------
