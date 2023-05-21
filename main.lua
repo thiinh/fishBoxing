@@ -42,7 +42,7 @@ function love.load()
     stayAwake       = love.audio.newSource("assets/music/stay-awake.wav", "stream") 
     wunder          = love.audio.newSource("assets/music/wunder.wav", "stream")
 
-    wunder:setVolume(0.03) -- 5% of original volume
+    wunder:setVolume(0.5) -- 5% of original volume
 
     -- SOUNDS
     yourSlap        = love.audio.newSource("assets/sounds/slap.wav", "static")
@@ -58,7 +58,7 @@ function love.load()
     ohio:setVolume(0.1)
 
     -- VIDEO
-    jos = love.graphics.newVideo("assets/jos.ogv")
+    -- jos = love.graphics.newVideo("assets/jos.ogv")
 end
 
 function shuffle(array)
@@ -199,7 +199,7 @@ function love.update(dt)
 end
 
 function love.draw()
-    --
+    --[[
     love.graphics.print("PLAYER GUESS: " .. tostring(playerGuess), 0, 0)
     love.graphics.print("PREVIOUS DIRECTION: " .. tostring(prevDir), 0 , 10)
     love.graphics.print("NEXT DIRECTION: " .. nextDir, 0, 20)
@@ -209,7 +209,7 @@ function love.draw()
     love.graphics.print("HAS THE MF GUESS?: " .. tostring(hasPlayerGuessed), 0, 60)
     love.graphics.print("CORRECT GUESSES: " .. correctGuesses, 0, 70)
     love.graphics.print("PREVIOUS DIRECTION 1: " .. tostring(prevDir1), 0, 80)
-    
+    ]]
 
     love.graphics.setBackgroundColor(128/255,128/255,128/255)
 
@@ -221,62 +221,65 @@ function love.draw()
     love.graphics.setColor(0,0,0)
     love.graphics.rectangle("fill", 0, 475, 800, 125)
 
-    -- arrow boxes
+    -- arrow boxes 125 apart
     love.graphics.setColor(1,1,1)
-    love.graphics.rectangle("line", 400, 510, 75, 75)
-    love.graphics.rectangle("line", 525, 510, 75, 75)
-    love.graphics.rectangle("line", 650, 510, 75, 75)
+    love.graphics.rectangle("line", 225, 510, 75, 75)
+    love.graphics.rectangle("line", 350, 510, 75, 75)
+    love.graphics.rectangle("line", 475, 510, 75, 75)
 
-    -- heart ui
+    --[[
     love.graphics.setColor(1,1,1)
     love.graphics.draw(heart, 15, 487, 0, 3, 3)
+    ]]
 
     -- guessing correctly
     if correctGuesses >= 1 then
         if prevDir == "up" then
-            love.graphics.draw(fishDirUp, fishPosX, fishPosY, 0, 2, 2)
+            love.graphics.draw(fishDirUp, 200, fishPosY, 0, 2, 2)
         elseif prevDir == "down" then
-            love.graphics.draw(fishDirDown, fishPosX, fishPosY, 0, 2, 2)
+            love.graphics.draw(fishDirDown, 200, fishPosY, 0, 2, 2)
         elseif prevDir == "left" then
-            love.graphics.draw(fishDirLeft, fishPosX, fishPosY, 0, 2, 2)
+            love.graphics.draw(fishDirLeft, 200, fishPosY, 0, 2, 2)
         elseif prevDir == "right" then
-            love.graphics.draw(fishDirRight, fishPosX, fishPosY, 0, 2, 2)
+            love.graphics.draw(fishDirRight, 200, fishPosY, 0, 2, 2)
         end     
     end
 
     if correctGuesses == 2 then
         if prevDir1 == "up" then
-            love.graphics.draw(fishDirUp, 500, fishPosY, 0, 2, 2)
+            love.graphics.draw(fishDirUp, 325, fishPosY, 0, 2, 2)
         elseif prevDir1 == "down" then
-            love.graphics.draw(fishDirDown, 500, fishPosY, 0, 2, 2)
+            love.graphics.draw(fishDirDown, 325, fishPosY, 0, 2, 2)
         elseif prevDir1 == "left" then
-            love.graphics.draw(fishDirLeft, 500, fishPosY, 0, 2, 2)
+            love.graphics.draw(fishDirLeft, 325, fishPosY, 0, 2, 2)
         elseif prevDir1 == "right" then
-            love.graphics.draw(fishDirRight, 500, fishPosY, 0, 2, 2)
+            love.graphics.draw(fishDirRight, 325, fishPosY, 0, 2, 2)
         end     
     end
 
     -- drawing for turn system
     if currentTurn == "opponent" then
-        love.graphics.draw(oppText, 505, 477, 0, 2, 2)
+        love.graphics.draw(oppText, 305, 477, 0, 2, 2)
         love.graphics.draw(oppTurnOppIdle, 200, 75, 0, 6, 6)
         love.graphics.draw(oppTurnPlayerFish, 300, 91, 0, 6, 6)
     elseif currentTurn == "player" then
-        love.graphics.draw(yourText, 505, 477, 0, 2, 2)
+        love.graphics.draw(yourText, 330, 477, 0, 2, 2)
         love.graphics.draw(playerFish, 300, 91, 0, 6, 6)
     end
 
     -- win/lose scene
     if correctGuesses >= 3 and currentTurn == "player" then
         love.graphics.draw(winScene, 0, 0)
-        --love.audio.stop(wunder)
+        love.audio.stop(wunder)
 
         --[[ MEME WIN SCENE
         love.graphics.draw(jos, 0, 0, 0, 0.5, 0.5)
-        jos:play()
+        jos:play()]]
         love.audio.play(ohio)
-        ]]
+        
     elseif correctGuesses >= 3 and currentTurn == "opponent" then
         love.graphics.draw(loseScene, 0, 0)
+    else
+        love.audio.stop(ohio)
     end
 end
